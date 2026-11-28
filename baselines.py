@@ -4,7 +4,7 @@
 2. ridge                - linear model on all features of the set
 3. xgboost              - Josh's starter settings (200 trees, depth 5)
 4. lgbm_example         - Numerai's documented example LightGBM settings
-5. benchmark            - Numerai's own lgbm_jupiter_60 predictions (all features, 60-day target; a ceiling)
+5. benchmark            - Numerai's own lgbm_jupiter_60 predictions (all features, same 60-day target; a ceiling)
 
 Usage: python baselines.py [small|medium|all]
 """

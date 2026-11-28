@@ -1,6 +1,6 @@
 """Evaluation harness for the Numerai v6 dataset.
 
-Weekly dates; validation runs 2019 onward. Official CORR only: v6.0 has no meta model file, so no offline MMC.
+Weekly dates; validation runs 2019 onward. `target` is identical to target_jupiter_60 (60 business days ahead). Official CORR only: v6.0 has no meta model file, so no offline MMC.
 
 Usage from another script:
     from evaluate import load_data, evaluate
@@ -23,7 +23,7 @@ from numerai_tools.scoring import max_feature_correlation, numerai_corr
 VERSION = "v6.0"
 DATE_COL = "date"
 TARGET = "target"
-GAP_DAYS = 35  # target looks 20 business days ahead; drop train rows this close to validation start
+GAP_DAYS = 90  # target (= target_jupiter_60) looks 60 business days (~12 weeks) ahead; drop train rows this close to validation start
 napi = NumerAPI()
 
 
