@@ -1,12 +1,12 @@
-"""A small model using the Numerai v6 dataset."""
+"""Model using the Numerai v6 dataset."""
 
 import json
 import pandas as pd
 from xgboost import XGBRegressor
 
-# choose a small set of numeric features
+# choose a set of numeric features
 with open("v6.0/features.json") as f:
-  feature_set = json.load(f)["feature_sets"]["small"]
+  feature_set = json.load(f)["feature_sets"]["all"]
 feature_set = [f for f in feature_set if f != "feature_country"]
 
 # load training data and live data
