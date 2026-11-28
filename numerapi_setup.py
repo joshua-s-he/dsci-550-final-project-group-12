@@ -9,6 +9,8 @@ napi.download_dataset(f"{version}/features.json")
 with open(f"{version}/features.json") as f:
     metadata = json.load(f)
 
+# Currently only includes 'small' to use less memory and to train faster
+# Change to 'medium' or 'all' to use medium/full feature set
 features = [
     col for col in metadata["feature_sets"]["small"]
     if col != "feature_country"
