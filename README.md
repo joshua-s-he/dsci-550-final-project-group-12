@@ -9,5 +9,6 @@ From the repository root, install the required packages:
 
 ```bash
 python -m pip install numerapi
+python -m pip install xgboost
 ```
 
