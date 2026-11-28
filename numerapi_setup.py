@@ -14,6 +14,12 @@ features = [
     if col != "feature_country"
 ]
 
+napi.download_dataset(f"{version}/live.parquet")
+live = pd.read_parquet(
+    f"{version}/live.parquet",
+    columns=["numerai_ticker"] + features,
+).set_index("numerai_ticker")
+
 napi.download_dataset(f"{version}/train.parquet")
 data = pd.read_parquet(
     f"{version}/train.parquet",
