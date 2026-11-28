@@ -1,0 +1,9 @@
+numerapi
+pandas
+pyarrow
+numpy
+xgboost
+lightgbm
+scikit-learn
+numerai-tools
+matplotlib
