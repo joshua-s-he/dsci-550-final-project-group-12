@@ -15,7 +15,7 @@ python -m pip install numerai-tools pyarrow
 
 ## Evaluation
 
-`python evaluate.py` trains the XGBoost baseline on the small feature set, scores it on the validation dates with Numerai's official CORR (and MMC when the meta model file is available), and writes `results/summary_xgb.csv` and `results/per_date_corr_xgb.csv`.
+`python evaluate.py` trains the XGBoost baseline on the small feature set, scores it on the validation dates with Numerai's official CORR and compares it to Numerai's benchmark model (v6.0 has no meta model file, so no offline MMC), and writes `results/summary_xgb.csv` and `results/per_date_corr_xgb.csv`.
 
 Other scripts import `load_data` and `evaluate` from `evaluate.py` so every model is scored the same way.
 

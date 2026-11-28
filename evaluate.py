@@ -1,5 +1,7 @@
 """Evaluation harness for the Numerai v6 dataset.
 
+Weekly dates; validation runs 2019 onward. Official CORR only: v6.0 has no meta model file, so no offline MMC.
+
 Usage from another script:
     from evaluate import load_data, evaluate
     train, valid, features = load_data("small")
@@ -16,7 +18,7 @@ import os
 import numpy as np
 import pandas as pd
 from numerapi import NumerAPI
-from numerai_tools.scoring import correlation_contribution, max_feature_correlation, numerai_corr
+from numerai_tools.scoring import max_feature_correlation, numerai_corr
 
 VERSION = "v6.0"
 DATE_COL = "date"
@@ -57,24 +59,13 @@ def per_date_corr(df, pred_cols):
     return df.groupby(DATE_COL).apply(lambda d: numerai_corr(d[pred_cols], d[TARGET]))
 
 
-def per_date_mmc(df, pred_cols, meta_col="numerai_meta_model"):
-    """MMC per date; needs the meta model column merged into df (see add_meta_model)."""
-    d = df.dropna(subset=[meta_col])
-    return d.groupby(DATE_COL).apply(lambda g: correlation_contribution(g[pred_cols], g[meta_col], g[TARGET]))
-
-
-def add_meta_model(df):
-    """Merge Numerai's historical meta model predictions into the validation frame, if available."""
-    try:
-        mm = pd.read_parquet(_download("meta_model.parquet")).reset_index()
-    except Exception as e:
-        print(f"meta model not available, skipping MMC ({e})")
-        return df
-    meta_col = next(c for c in mm.columns if c.startswith("numerai_meta_model"))
-    if DATE_COL in mm.columns:
-        mm[DATE_COL] = pd.to_datetime(mm[DATE_COL])
-    keys = [k for k in ("numerai_ticker", DATE_COL) if k in mm.columns]
-    return df.merge(mm[keys + [meta_col]].rename(columns={meta_col: "numerai_meta_model"}), on=keys, how="left")
+def add_benchmark(df):
+    """Merge Numerai's benchmark model predictions (lgbm_jupiter_60) for the validation dates.
+    v6.0 ships no meta model file, so MMC can't be computed offline; the benchmark is our reference instead."""
+    b = pd.read_parquet(_download("validation_benchmark_models.parquet"))
+    b[DATE_COL] = pd.to_datetime(b[DATE_COL])
+    col = next(c for c in b.columns if c not in ("numerai_ticker", DATE_COL))
+    return df.merge(b.rename(columns={col: "pred_benchmark"}), on=["numerai_ticker", DATE_COL], how="left")
 
 
 def max_drawdown(scores):
@@ -91,7 +82,7 @@ def feature_exposure(df, pred_col, features, n_dates=50):
     return float(np.mean(vals))
 
 
-def evaluate(df, pred_cols, features, mmc=False):
+def evaluate(df, pred_cols, features):
     """Print and return a summary table: one row per model."""
     corr = per_date_corr(df, pred_cols)
     summary = pd.DataFrame({
@@ -102,10 +93,6 @@ def evaluate(df, pred_cols, features, mmc=False):
         "pct_dates_positive": (corr > 0).mean(),
         "feature_exposure": [feature_exposure(df, c, features) for c in pred_cols],
     })
-    if mmc and "numerai_meta_model" in df:
-        m = per_date_mmc(df, pred_cols)
-        summary["mmc_mean"] = m.mean()
-        summary["mmc_sharpe"] = m.mean() / m.std()
     print(summary.round(4).to_string())
     return summary, corr
 
@@ -118,8 +105,8 @@ if __name__ == "__main__":
     model.fit(train[features], train[TARGET])
     valid["pred_xgb"] = model.predict(valid[features])
 
-    valid = add_meta_model(valid)
-    summary, corr = evaluate(valid, ["pred_xgb"], features, mmc=True)
+    valid = add_benchmark(valid).dropna(subset=["pred_benchmark"])
+    summary, corr = evaluate(valid, ["pred_xgb", "pred_benchmark"], features)
     os.makedirs("results", exist_ok=True)
     summary.to_csv("results/summary_xgb.csv")
     corr.to_csv("results/per_date_corr_xgb.csv")
